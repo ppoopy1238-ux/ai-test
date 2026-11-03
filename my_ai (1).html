@@ -1,0 +1,409 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS AI MAINFRAME</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap');
+
+:root {
+ --cyan:#00f5ff;--pink:#ff00a8;--green:#00ff9d;
+ --bg:#050711;--panel:#0a1222;--muted:#7895a5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#d7faff;font-family:'Share Tech Mono',monospace;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(#00f5ff09 1px,transparent 1px),linear-gradient(90deg,#00f5ff09 1px,transparent 1px);background-size:35px 35px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:255px;flex-shrink:0;background:#040915;border-right:1px solid #00f5ff55;padding:25px 18px;display:flex;flex-direction:column;z-index:1}
+.logo{font:800 20px Orbitron;color:var(--cyan);text-shadow:0 0 15px var(--cyan)}
+.sub{font-size:10px;color:var(--muted);letter-spacing:2px;margin:8px 0 35px}
+.label{font-size:10px;color:var(--muted);letter-spacing:2px;margin:20px 0 12px}
+.nav{width:100%;padding:15px 10px;text-align:left;background:transparent;border:1px solid transparent;color:#7895a5;cursor:pointer;margin:4px 0;font:12px inherit}
+.nav.active,.nav:hover{color:var(--cyan);border-color:#00f5ff66;background:#00f5ff0d;box-shadow:inset 3px 0 var(--cyan)}
+.metric{padding:15px;border:1px solid #00f5ff55;margin-top:10px}
+.metric small{color:var(--muted)}
+.metric strong{display:block;font:700 27px Orbitron;color:var(--cyan);margin-top:9px}
+.bottom{margin-top:auto;color:var(--green);font-size:10px;line-height:2}
+main{flex:1;min-width:0;padding:28px}
+header{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #00f5ff44;padding-bottom:20px;margin-bottom:25px}
+h1{font:700 20px Orbitron;margin:0}
+.online{color:var(--green);font-size:11px}
+.panel{display:none}.panel.active{display:block}
+.card{background:#0a1222eF;border:1px solid #00f5ff55;padding:23px;box-shadow:0 0 25px #00f5ff08}
+.card h2{font:500 14px Orbitron;color:var(--cyan);letter-spacing:2px}
+.desc{font-size:12px;color:var(--muted);line-height:1.8}
+.terminal{height:calc(100vh - 145px);min-height:470px;display:flex;flex-direction:column}
+.chat{flex:1;overflow:auto;padding:20px 0;display:flex;flex-direction:column;gap:15px}
+.msg{max-width:88%;padding:13px 15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:13px}
+.ai{align-self:flex-start;border-left:2px solid var(--cyan);background:#00f5ff0c}
+.user{align-self:flex-end;border-right:2px solid var(--pink);background:#ff00a80c}
+.error{border-left-color:var(--pink);color:#ff9bd8}
+.meta{display:block;color:var(--muted);font-size:10px;margin-bottom:7px}
+form.chatform{display:flex;gap:10px;border-top:1px solid #00f5ff44;padding-top:17px}
+input,textarea{width:100%;padding:14px;background:#050b17;color:var(--cyan);border:1px solid #00f5ff55;outline:none;font:13px 'Share Tech Mono'}
+input:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 12px #00f5ff33}
+textarea{min-height:115px;resize:vertical}
+button{font-family:Orbitron;cursor:pointer}
+.send,.compile{background:#00f5ff12;border:1px solid var(--cyan);color:var(--cyan);padding:14px 18px;font-size:10px;white-space:nowrap}
+.send:hover,.compile:hover{background:var(--cyan);color:#000}
+.training{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-top:20px}
+.api-config{margin-top:20px;border-color:#ff00a866}
+.api-config h2{color:var(--pink)}
+.api-row{display:flex;gap:10px;align-items:stretch;margin-top:14px}
+.api-row input{min-width:0}
+.api-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.api-button{background:#ff00a80d;border:1px solid var(--pink);color:var(--pink);padding:12px 15px;font-size:10px}
+.api-button:hover{background:var(--pink);color:#000}
+.api-status{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7}
+.api-status.connected{color:var(--green)}
+.api-status.disconnected{color:#ff9bd8}
+button:disabled{opacity:.5;cursor:not-allowed}
+.api-warning{color:#ffb4e4}
+.field{margin-top:20px}
+.field label{display:block;color:var(--cyan);font-size:11px;margin-bottom:9px}
+.compile{width:100%;margin-top:22px;padding:17px;border-color:var(--pink);color:var(--pink)}
+.progress{display:none;margin-top:22px}
+.progresshead{display:flex;justify-content:space-between;color:var(--cyan);font-size:11px;margin-bottom:10px}
+.track{height:12px;background:#111d2d;border:1px solid #00f5ff66}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--pink));box-shadow:0 0 15px var(--cyan);transition:width .1s}
+.done{display:none;color:var(--green);font:15px Orbitron;margin-top:18px;text-shadow:0 0 12px var(--green)}
+.node{padding:13px 0;border-bottom:1px solid #00f5ff22;font-size:12px;overflow-wrap:anywhere}
+.node strong{color:var(--pink);display:block;margin-bottom:5px}
+.node span{color:var(--muted);line-height:1.6}
+.del{float:right;background:transparent;border:1px solid var(--pink);color:var(--pink);font-size:9px;padding:5px}
+@media(max-width:850px){.training{grid-template-columns:1fr}}
+@media(max-width:600px){.app{flex-direction:column}.sidebar{width:100%;padding:15px}.sub{margin-bottom:15px}.nav{display:inline-block;width:auto}.bottom{display:none}main{padding:15px}.terminal{height:65vh}.chatform{flex-wrap:wrap}.send{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+ <div class="logo">NEXUS // AI</div>
+ <div class="sub">NEURAL MAINFRAME v2.0</div>
+ <div class="label">SYSTEM NAVIGATION</div>
+ <button class="nav active" data-tab="terminal">◈ MAINFRAME TERMINAL</button>
+ <button class="nav" data-tab="training">◈ TRAINING CORE HUB</button>
+ <div class="label">CORE STATISTICS</div>
+ <div class="metric"><small>TOTAL MEMORY NODES</small><strong id="count">03</strong></div>
+ <div class="metric"><small>SYSTEM STATUS</small><strong style="font-size:17px;color:var(--green)">ONLINE</strong></div>
+ <div class="bottom">● CORE CONNECTION ACTIVE<br>LOCAL MEMORY ENGINE<br>BUILD 2.0.26</div>
+</aside>
+
+<main>
+<header><h1 id="title">MAINFRAME TERMINAL</h1><span class="online">● SYSTEMS NOMINAL</span></header>
+
+<section class="panel active" id="terminal">
+ <div class="card terminal">
+  <div><h2>NEURAL INTERFACE</h2><p class="desc">Gemini-powered conversation with NEXUS knowledge memory.</p></div>
+  <div class="chat" id="chat">
+   <div class="msg ai"><span class="meta">NEXUS AI // INITIALIZATION</span>MAINFRAME CONNECTION ESTABLISHED.
+
+Welcome, Operator.
+
+Local memory engine initialized.
+Awaiting your input...</div>
+  </div>
+  <form class="chatform" id="chatForm">
+   <input id="question" placeholder="Enter your command or question..." autocomplete="off" required>
+   <button class="send">TRANSMIT ↗</button>
+  </form>
+ </div>
+</section>
+
+<section class="panel" id="training">
+ <div class="card">
+  <h2>TRAINING CORE HUB</h2>
+  <p class="desc">Connect Gemini, then use the Data Injection Module to submit each new knowledge record to Gemini for processing. NEXUS saves your original data plus a Gemini-generated retrieval note and uses both in future answers. This builds a knowledge base; it does not change Gemini model weights.</p>
+  <div class="card api-config">
+   <h2>GOOGLE GEMINI CONNECTION</h2>
+   <p class="desc">Connect NEXUS to Google Gemini. Your key is sent to the local backend and held in server memory only; it is not written to a file.</p>
+   <div class="field">
+    <label for="apiKey"> // GOOGLE GEMINI API KEY</label>
+    <div class="api-row">
+     <input id="apiKey" type="password" placeholder="Paste API key here..." autocomplete="off" autocapitalize="off" spellcheck="false">
+     <button class="api-button" id="toggleApiKey" type="button" aria-pressed="false">SHOW</button>
+    </div>
+   </div>
+   <div class="api-actions">
+    <button class="api-button" id="saveApiKey" type="button">CONNECT GEMINI</button>
+    <button class="api-button" id="clearApiKey" type="button">CLEAR KEY</button>
+   </div>
+   <p class="api-status disconnected" id="apiStatus" role="status" aria-live="polite">● CHECKING LOCAL GEMINI BACKEND...</p>
+   <p class="api-status api-warning">SECURITY: This starter app binds only to 127.0.0.1 (your computer). Do not expose it publicly without adding user authentication, HTTPS, and rate limiting.</p>
+   <p class="api-status">KNOWLEDGE MODE: Your saved memory nodes are sent to Gemini as reference context for each request. This is retrieval-augmented prompting, not provider-side model fine-tuning.</p>
+  </div>
+  <div class="training">
+   <div class="card">
+    <h2>DATA INJECTION MODULE</h2>
+    <form id="trainingForm">
+     <div class="field"><label> // TRIGGER WORD / PHRASE</label><input id="trigger" maxlength="150" placeholder="Example: what is project nexus?" required></div>
+     <div class="field"><label> // NEURAL RESPONSE DATA</label><textarea id="response" maxlength="5000" placeholder="Enter the AI response..." required></textarea></div>
+     <button class="compile" id="compile">⚡ TRAIN NEXUS WITH GEMINI</button>
+    </form>
+    <div class="progress" id="progress">
+     <div class="progresshead"><span id="progressTitle">COMPILING NEURAL DATA...</span><span id="percent">0%</span></div>
+     <div class="track"><div class="fill" id="fill"></div></div>
+     <div class="done" id="done">GEMINI TRAINING COMPLETE — KNOWLEDGE INSTALLED</div>
+    </div>
+   </div>
+   <div class="card">
+    <h2>MEMORY DATABASE</h2>
+    <p class="desc">Installed neural memory nodes:</p>
+    <div id="nodes"></div>
+    <p class="desc">Each new entry is processed by Gemini before it is saved. The original data and its Gemini-generated retrieval note are included as context in later conversations. Previously saved entries remain available as context too.</p>
+   </div>
+  </div>
+ </div>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+
+const KEY = "nexus_ai_memory_v2";
+const MODEL = "gemini-3.8-flash";
+const defaults = [
+ {id:"default-hello",trigger:"hello",response:"Greetings, Operator. NEXUS AI is online and ready to assist you. All neural systems are functioning normally."},
+ {id:"default-specs",trigger:"system specs",response:"NEXUS MAINFRAME SYSTEM SPECIFICATIONS:\n\nCORE ENGINE: Google Gemini via local Node.js backend\nINTERFACE: Cyberpunk Neural Console\nMEMORY: Browser LocalStorage, supplied to Gemini as context\nRESPONSE MODE: Gemini generation with local knowledge context\nSTATUS: OPERATIONAL when Gemini is connected\n\nThis app uses a knowledge base for context; it does not fine-tune Gemini model weights."},
+ {id:"default-status",trigger:"status check",response:"SYSTEM DIAGNOSTIC REPORT:\n\n[OK] Neural interface active\n[OK] Local memory database connected\n[OK] Training context module operational\n[OK] Gemini connection can be checked in Training Core Hub\n\nOVERALL STATUS: CHECK THE GEMINI CONNECTION INDICATOR."}
+];
+
+function loadMemory(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(KEY)||"[]");
+  if(!Array.isArray(saved)) return [...defaults];
+  return [...defaults,...saved.filter(n=>n&&typeof n.trigger==="string"&&typeof n.response==="string"&&!defaults.some(d=>d.id===n.id))];
+ }catch(e){return [...defaults];}
+}
+let memory=loadMemory();
+let busy=false;
+let geminiConnected=false;
+const conversation=[];
+
+function save(){
+ try{localStorage.setItem(KEY,JSON.stringify(memory));}
+ catch(e){alert("Unable to save data. Browser storage may be full.");}
+}
+function normalize(s){return s.toLowerCase().trim().replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ");}
+function updateCount(){document.getElementById("count").textContent=String(memory.length).padStart(2,"0");}
+
+const apiKeyInput=document.getElementById("apiKey");
+const apiStatus=document.getElementById("apiStatus");
+function setApiStatus(message,connected){
+ apiStatus.textContent=message;
+ apiStatus.classList.toggle("connected",!!connected);
+ apiStatus.classList.toggle("disconnected",!connected);
+ geminiConnected=!!connected;
+}
+async function refreshApiStatus(){
+ try{
+  const r=await fetch("/api/status");
+  if(!r.ok) throw new Error("Local backend unavailable");
+  const data=await r.json();
+  setApiStatus(data.connected?`● GEMINI CONNECTED — ${data.model}`:"● NO GEMINI KEY CONNECTED",data.connected);
+ }catch(e){setApiStatus("● BACKEND OFFLINE — START NEXUS WITH npm start",false);}
+}
+
+document.getElementById("toggleApiKey").addEventListener("click",()=>{
+ const reveal=apiKeyInput.type==="password";
+ apiKeyInput.type=reveal?"text":"password";
+ const toggle=document.getElementById("toggleApiKey");
+ toggle.textContent=reveal?"HIDE":"SHOW";
+ toggle.setAttribute("aria-pressed",String(reveal));
+});
+
+document.getElementById("saveApiKey").addEventListener("click",async()=>{
+ const entered=apiKeyInput.value.trim();
+ if(!entered){setApiStatus("● ENTER YOUR GEMINI API KEY FIRST",false);return;}
+ const btn=document.getElementById("saveApiKey");
+ btn.disabled=true; btn.textContent="CONNECTING...";
+ try{
+  const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({apiKey:entered})});
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||"Gemini connection failed");
+  apiKeyInput.value=""; apiKeyInput.type="password";
+  const toggle=document.getElementById("toggleApiKey"); toggle.textContent="SHOW"; toggle.setAttribute("aria-pressed","false");
+  setApiStatus(`● GEMINI CONNECTED — ${data.model}`,true);
+ }catch(e){setApiStatus(`● CONNECTION FAILED — ${e.message}`,false);}
+ finally{btn.disabled=false;btn.textContent="CONNECT GEMINI";}
+});
+
+document.getElementById("clearApiKey").addEventListener("click",async()=>{
+ try{
+  const r=await fetch("/api/config/clear",{method:"POST"});
+  if(!r.ok) throw new Error("Could not clear server key");
+  apiKeyInput.value=""; apiKeyInput.type="password";
+  const toggle=document.getElementById("toggleApiKey");
+  toggle.textContent="SHOW"; toggle.setAttribute("aria-pressed","false");
+  setApiStatus("● GEMINI KEY CLEARED FROM SERVER MEMORY",false);
+ }catch(e){setApiStatus("● BACKEND OFFLINE — KEY NOT CLEARED",false);}
+});
+
+document.querySelectorAll(".nav").forEach(btn=>{
+ btn.addEventListener("click",()=>{
+  document.querySelectorAll(".nav").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.tab).classList.add("active");
+  document.getElementById("title").textContent=btn.dataset.tab==="terminal"?"MAINFRAME TERMINAL":"TRAINING CORE HUB";
+  renderNodes();
+ });
+});
+
+function addMessage(text,type){
+ const el=document.createElement("div"); el.className="msg "+type;
+ const meta=document.createElement("span"); meta.className="meta";
+ meta.textContent=type==="user"?"OPERATOR // TRANSMISSION":type==="error"?"NEXUS AI // CONNECTION ERROR":"NEXUS AI // RESPONSE";
+ const body=document.createElement("div"); body.textContent=text;
+ el.append(meta,body);
+ const chat=document.getElementById("chat"); chat.append(el); chat.scrollTop=chat.scrollHeight;
+ return el;
+}
+
+function findMatch(q){
+ const query=normalize(q); if(!query)return null;
+ const exact=memory.find(n=>normalize(n.trigger)===query); if(exact)return exact;
+ let best=null,score=0; const words=query.split(" ");
+ memory.forEach(n=>{
+  const trigger=normalize(n.trigger); if(!trigger)return;
+  const tw=trigger.split(" "); let s=0;
+  if(query.includes(trigger))s=100+trigger.length;
+  else if(tw.every(w=>words.includes(w)))s=50+trigger.length;
+  else{const matches=tw.filter(w=>words.includes(w));if(matches.length)s=matches.length/tw.length*30;}
+  if(s>score){score=s;best=n;}
+ });
+ return score>=30?best:null;
+}
+
+async function askGemini(q){
+ const payload={
+  message:q,
+  memory:memory.map(n=>({trigger:n.trigger,response:n.response,trainedNotes:n.trainedNotes||""})),
+  history:conversation.slice(-10)
+ };
+ const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+ const data=await r.json();
+ if(!r.ok) throw new Error(data.error||"Gemini request failed");
+ return data.text;
+}
+
+document.getElementById("chatForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const input=document.getElementById("question"); const q=input.value.trim(); if(!q||busy)return;
+ addMessage(q,"user"); input.value=""; busy=true;
+ const send=document.querySelector(".send"); send.disabled=true; send.textContent="PROCESSING...";
+ try{
+  if(geminiConnected){
+   const answer=await askGemini(q);
+   addMessage(answer||"Gemini returned an empty response.","ai");
+   conversation.push({role:"user",text:q},{role:"model",text:answer||""});
+   if(conversation.length>20)conversation.splice(0,conversation.length-20);
+  }else{
+   const match=findMatch(q);
+   if(match)addMessage(match.response,"ai");
+   else addMessage("Gemini is not connected. Open TRAINING CORE HUB, add your Google Gemini API key, and select CONNECT GEMINI. Your local knowledge nodes are still saved.","error");
+  }
+ }catch(err){addMessage(`GEMINI REQUEST FAILED: ${err.message}\nCheck your API key, model access, internet connection, and Google AI Studio quota.`,"error");}
+ finally{busy=false;send.disabled=false;send.textContent="TRANSMIT ↗";}
+});
+
+function renderNodes(){
+ const list=document.getElementById("nodes"); list.replaceChildren();
+ memory.forEach(n=>{
+  const box=document.createElement("div"); box.className="node";
+  const name=document.createElement("strong"); name.textContent="◆ "+n.trigger;
+  const desc=document.createElement("span"); desc.textContent=n.response.length>100?n.response.slice(0,100)+"...":n.response;
+  box.append(name,desc);
+  if(n.trainedNotes){
+   const trained=document.createElement("span");
+   trained.style.display="block";
+   trained.style.marginTop="7px";
+   trained.style.color="var(--green)";
+   trained.textContent="GEMINI INDEX: "+n.trainedNotes;
+   box.append(trained);
+  }
+  if(n.id&&n.id.startsWith("custom-")){
+   const del=document.createElement("button"); del.className="del"; del.textContent="DELETE";
+   del.addEventListener("click",()=>{
+    if(confirm("Delete this memory node?")){memory=memory.filter(x=>x.id!==n.id);save();updateCount();renderNodes();}
+   });
+   box.append(del);
+  }
+  list.append(box);
+ });
+}
+
+function install(trigger,response,trainedNotes){
+ const normalized=normalize(trigger);
+ const index=memory.findIndex(n=>normalize(n.trigger)===normalized);
+ const record={trigger,response,trainedNotes:trainedNotes||"",trainedAt:new Date().toISOString(),trainedWith:MODEL};
+ if(index>=0){memory[index]={...memory[index],...record};}
+ else{memory.push({id:"custom-"+Date.now()+"-"+Math.random().toString(36).slice(2),...record});}
+ save(); updateCount(); renderNodes();
+}
+
+document.getElementById("trainingForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(busy)return;
+ if(!geminiConnected){
+  const title=document.getElementById("progressTitle");
+  const progress=document.getElementById("progress");
+  progress.style.display="block";
+  title.textContent="CONNECT GEMINI BEFORE TRAINING NEXUS";
+  document.getElementById("done").style.display="none";
+  setApiStatus("● ADD YOUR GEMINI API KEY AND CONNECT BEFORE TRAINING",false);
+  return;
+ }
+ const trigger=document.getElementById("trigger").value.trim();
+ const response=document.getElementById("response").value.trim();
+ if(!trigger||!response)return;
+ busy=true;
+ const btn=document.getElementById("compile");
+ const progress=document.getElementById("progress");
+ const fill=document.getElementById("fill");
+ const percent=document.getElementById("percent");
+ const title=document.getElementById("progressTitle");
+ const done=document.getElementById("done");
+ btn.disabled=true; btn.style.opacity=".5"; btn.textContent="GEMINI IS TRAINING...";
+ progress.style.display="block"; done.style.display="none";
+ title.textContent="SENDING DATA TO GEMINI FOR KNOWLEDGE INGESTION...";
+ fill.style.width="20%"; percent.textContent="SUBMITTING";
+ try{
+  const r=await fetch("/api/train",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({trigger,response})
+  });
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||"Gemini knowledge ingestion failed");
+  if(typeof data.trainedNotes!=="string"||!data.trainedNotes.trim())throw new Error("Gemini did not return a training index. Nothing was saved.");
+  title.textContent="INSTALLING GEMINI-PROCESSED KNOWLEDGE INTO NEXUS...";
+  fill.style.width="85%"; percent.textContent="INSTALLING";
+  install(trigger,response,data.trainedNotes.trim());
+  document.getElementById("trigger").value="";
+  document.getElementById("response").value="";
+  fill.style.width="100%"; percent.textContent="100%";
+  title.textContent="GEMINI TRAINING COMPLETE";
+  done.textContent="GEMINI PROCESSED THE ENTRY — NEXUS KNOWLEDGE UPDATED";
+  done.style.display="block";
+ }catch(err){
+  title.textContent="TRAINING FAILED — NOTHING WAS SAVED";
+  percent.textContent="ERROR";
+  fill.style.width="0%";
+  done.textContent=err.message;
+  done.style.display="block";
+  done.style.color="#ff9bd8";
+ }finally{
+  btn.disabled=false; btn.style.opacity="1"; btn.textContent="⚡ TRAIN NEXUS WITH GEMINI";
+  busy=false;
+ }
+});
+
+updateCount(); renderNodes(); refreshApiStatus();
+console.log("NEXUS AI MAINFRAME ONLINE — Gemini integration ready");
+</script>
+</body>
+</html>
